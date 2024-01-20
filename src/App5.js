@@ -4,7 +4,7 @@ import MarkerClusterGroup from "react-leaflet-cluster";
 import "./App.css";
 import { Icon, divIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { uploadJSONToFirestore , uploadJSONDynamically , uploadPolylinesToFirestore } from './FireApp'; // Import the function
+import { uploadJSONToFirestore , uploadJSONDynamically } from './FireApp'; // Import the function
 
 const customIcon = new Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/5968/5968526.png",
@@ -316,18 +316,6 @@ export default function App() {
     uploadJSONToFirestore(coordinatesJSON);
   };
 
-  const getPolylinesAsJSON = () => {
-    const polylinesJSON = userPolylines.map((polyline) => ({
-      coordinates: polyline.map((coord) => ({
-        latitude: coord[0],
-        longitude: coord[1],
-      })),
-    }));
-  
-    // Call the upload function from FireApp.js to upload the polylines to Firestore
-    uploadPolylinesToFirestore(polylinesJSON);
-  };
-
   return (
     <div>
       <br />
@@ -363,7 +351,7 @@ export default function App() {
         }
       />
       <button onClick={handleAddMarker}>Add Marker</button>
-      <button onClick={() => console.log(getPolylinesAsJSON())}>GetCoordinates</button>
+      <button onClick={() => console.log(getCoordinatesAsJSON())}>GetCoordinates</button>
 
       <hr />
 

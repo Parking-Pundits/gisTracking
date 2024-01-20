@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MapContainer, Marker, Popup, TileLayer, Polyline, useMapEvents } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import "./App.css";
 import { Icon, divIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { uploadJSONToFirestore , uploadJSONDynamically , uploadPolylinesToFirestore } from './FireApp'; // Import the function
+import { uploadJSONToFirestore , uploadJSONDynamically , uploadPolylinesToFirestore ,fetchNodeDataFromFirestore } 
+from './FireApp'; // Import the function
 
 const customIcon = new Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/5968/5968526.png",
@@ -15,7 +16,7 @@ const createClusterCustomIcon = function (cluster) {
   return new divIcon({
     html: `<span class="cluster-icon">${cluster.getChildCount()}</span>`,
     className: "custom-marker-cluster",
-    iconSize: [50, 50],
+    iconSize: [33, 33],
   });
 };
 
@@ -25,6 +26,9 @@ export default function App() {
     latitude: "",
     longitude: "",
     popUp: "",
+    IsContaminated : 0,
+    IsLeaking : 0,
+    CaseOfProliferation : 0,
   });
 
   function MyComponent() {
@@ -34,163 +38,39 @@ export default function App() {
         const { lat, lng } = e.latlng;
         console.log(`Coordinates: Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}`);
         setUserCoordinates({
-        latitude: lat.toFixed(6),
-        longitude: lng.toFixed(6),
-        popUp: "", // Clear the popUp field when clicking on the map
+          latitude: lat.toFixed(6),
+          longitude: lng.toFixed(6),
+          popUp: "", // Clear the popUp field when clicking on the map
         });
         setCurrentPolylineStart({
-        latitude: lat.toFixed(6),
-        longitude: lng.toFixed(6),
-
-        })
+          latitude: lat.toFixed(6),
+          longitude: lng.toFixed(6),
+        });
       },
     });
   
-    return null;
+    return null; // Issue 1: Missing return statement
   }
   
 
-  const [markers, setMarkers] = useState([
-    
-    {
-      geocode: [21.071285,79.065530],
-      popUp: "Source1"
-    },
-    {
-      geocode: [21.070747,79.065341],
-      popUp: "Node 1"
-    },
-    {
-      geocode: [21.070308,79.065248],
-      popUp: "Node 2"
-    },
-    {
-      geocode: [21.070211,79.065853],
-      popUp: "Node 3"
-    },
-    {
-      geocode: [21.069082,79.065665],
-      popUp: "Node 4"
-    },
-    {
-      geocode: [21.069256,79.064727],
-      popUp: "Node 5"
-    },
-    {
-      geocode: [21.068633,79.065626],
-      popUp: "Node 6"
-    },
-    {
-      geocode: [21.068837,79.064682],
-      popUp: "Node 7"
-    },
-    {
-      geocode: [21.068407,79.064586],
-      popUp: "Node 8"
-    },
-    {
-      geocode: [21.070102,79.066756],
-      popUp: "Node 9"
-    },
-    {
-      geocode: [21.070545,79.066820],
-      popUp: "Node 10"
-    },
-    {
-      geocode : [21.070015,79.067354],
-      popUp: "Node 11"
-    },
-    {
-      geocode: [21.069682,79.066709],
-      popUp: "Node 12"
-    },
-    {
-      geocode: [21.069764,79.066254],
-      popUp: "Node 13"
-    },
-    {
-      geocode: [21.067962,79.066011],
-      popUp: "Node 14"
-    },
-    {
-      geocode: [21.071395,79.067521],
-      popUp: "Node 15"
-    },
-    {
-      geocode: [21.069860,79.068613],
-      popUp: "Node 16"
-    }
-  ]);
-  const [userPolylines, setUserPolylines] = useState([
-    [
-        [21.1490, 79.0890], // Start coordinate
-        [21.1467, 79.0867], // End coordinate
-      ],
-      [
-        [21.071285,79.065530], //Tank
-        [21.070747,79.065341],  //Node1
-      ],
-      [
-        [21.070747,79.065341],  //Node1
-        [21.070308,79.065248],  //Node2
-      ],
-      [
-        [21.070308,79.065248],  //Node2
-        [21.070211,79.065853],  //Node3
-      ],
-      [
-        [21.070211,79.065853],  //Node3
-        [21.069082,79.065665],  //Node4
-      ],
-      [
-        [21.069082,79.065665],  //Node4
-        [21.069256,79.064727],  //Node5
-      ],
-      [
-        [21.069082,79.065665],  //Node4
-        [21.068633,79.065626],  //Node6
-      ],
-      [
-        [21.069256,79.064727],  //Node5
-        [21.068837,79.064682],  //Node7
-      ],
-      [
-        [21.068837,79.064682],  //Node7
-        [21.068407,79.064586],  //Node8
-      ],
-      [
-        [21.070211,79.065853],  //Node3
-        [21.070102,79.066756],  //Node9 
-      ],
-      [
-        [21.070102,79.066756],  //Node9 
-        [21.070545,79.066820],  //Node10
-      ],
-      [
-        [21.070015,79.067354],  //Node11
-        [21.070102,79.066756],  //Node9 
-      ],
-      [
-        [21.069682,79.066709],  //Node12
-        [21.070102,79.066756],  //Node9 
-      ],
-      [
-        [21.069764,79.066254],  //Node13
-        [21.069682,79.066709],  //Node12
-      ],
-      [
-        [21.069764,79.066254],  //Node13
-        [21.067962,79.066011],  //Node14
-      ],
-      [
-        [21.070015,79.067354],  //Node11
-        [21.071395,79.067521],  //Node15
-      ],
-      [
-        [21.070015,79.067354],  //Node11
-        [21.069860,79.068613],  //Node16
-      ],
-  ]);
+  const [markers, setMarkers] = useState([]);
+  useEffect(() => {
+    // Fetch node data from Firestore
+    const fetchNodeData = async () => {
+      try {
+        const nodeData = await fetchNodeDataFromFirestore();
+        setMarkers(nodeData);
+        console.log("It worked here");
+      } catch (error) {
+        console.error('Error fetching node data:', error);
+      }
+    };
+    fetchNodeData();
+  }, []);
+
+
+  
+  const [userPolylines, setUserPolylines] = useState([]);
   const [currentPolylineStart, setCurrentPolylineStart] = useState({
     latitude: "",
     longitude: "",
@@ -231,6 +111,9 @@ export default function App() {
         latitude: "",
         longitude: "",
         popUp: "",
+        IsContaminated : 0,
+        IsLeaking : 0,
+        CaseOfProliferation :0 ,
       });
     } else {
       // Handle error or validation message when not all input fields are filled
@@ -285,12 +168,6 @@ export default function App() {
     console.log(userCoordinates.longitude)
   };
 
-  const handleSetLatitude = () => {
-    setUserCoordinates({
-      ...userCoordinates,
-      latitude: "42.123456",
-    });
-  };
 
   const handleMarkerClick = (coordinates) => {
     console.log(`Clicked Marker: Lat ${coordinates[0]}, Lng ${coordinates[1]}`);
@@ -428,11 +305,15 @@ export default function App() {
       <Marker key={index} position={marker.geocode} icon={customIcon} eventHandlers={{
         click: () => handleMarkerClick(marker.geocode),
       }}>
-        <Popup>{marker.popUp}</Popup>
+        <Popup>
+          {marker.popUp}
+        </Popup>
       </Marker>
     ))}
   </MarkerClusterGroup>
+  </MyComponent>
 </MapContainer>
+
       
     </div>
   );

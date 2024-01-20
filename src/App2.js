@@ -4,7 +4,6 @@ import MarkerClusterGroup from "react-leaflet-cluster";
 import "./App.css";
 import { Icon, divIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { uploadJSONToFirestore , uploadJSONDynamically , uploadPolylinesToFirestore } from './FireApp'; // Import the function
 
 const customIcon = new Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/5968/5968526.png",
@@ -15,7 +14,7 @@ const createClusterCustomIcon = function (cluster) {
   return new divIcon({
     html: `<span class="cluster-icon">${cluster.getChildCount()}</span>`,
     className: "custom-marker-cluster",
-    iconSize: [50, 50],
+    iconSize: [33, 33],
   });
 };
 
@@ -51,10 +50,21 @@ export default function App() {
   
 
   const [markers, setMarkers] = useState([
-    
+    {
+      geocode: [21.1490, 79.0890],
+      popUp: "Hello, I am pop up 1"
+    },
+    {
+      geocode: [21.1467, 79.0867],
+      popUp: "Hello, I am pop up 2"
+    },
+    {
+      geocode: [21.1501, 79.0801],
+      popUp: "Hello, I am pop up 3"
+    },
     {
       geocode: [21.071285,79.065530],
-      popUp: "Source1"
+      popUp: "Crown Society Water Tank"
     },
     {
       geocode: [21.070747,79.065341],
@@ -210,20 +220,8 @@ export default function App() {
           parseFloat(userCoordinates.latitude),
           parseFloat(userCoordinates.longitude),
         ],
-
         popUp: userCoordinates.popUp,
       };
-      const jsonDataForNode ={
-        latitude: parseFloat(userCoordinates.latitude),
-        longitude:parseFloat(userCoordinates.longitude),
-        popUp: userCoordinates.popUp,
-        IsContaminated : 0,
-        IsLeaking : 0,
-        CaseOfProliferation : 0,
-      };
-      uploadJSONDynamically(jsonDataForNode); // Replace 'unique_document_name' with a unique identifier for the document
-    
-  
 
       setMarkers((prevMarkers) => [...prevMarkers, newMarker]);
 
@@ -303,29 +301,14 @@ export default function App() {
 
 
   const getCoordinatesAsJSON = () => {
-    const coordinatesJSON = markers.map((marker) => ({
+    const coordinatesJSON = markers.map((marker, index) => ({
+      id: index + 1,
       latitude: marker.geocode[0],
       longitude: marker.geocode[1],
       popUp: marker.popUp,
-      IsContaminated : 0,
-      IsLeaking : 0,
-      CaseOfProliferation : 0,
     }));
 
-    // Call the upload function from FireApp.js
-    uploadJSONToFirestore(coordinatesJSON);
-  };
-
-  const getPolylinesAsJSON = () => {
-    const polylinesJSON = userPolylines.map((polyline) => ({
-      coordinates: polyline.map((coord) => ({
-        latitude: coord[0],
-        longitude: coord[1],
-      })),
-    }));
-  
-    // Call the upload function from FireApp.js to upload the polylines to Firestore
-    uploadPolylinesToFirestore(polylinesJSON);
+    return JSON.stringify(coordinatesJSON, null, 2);
   };
 
   return (
@@ -363,7 +346,7 @@ export default function App() {
         }
       />
       <button onClick={handleAddMarker}>Add Marker</button>
-      <button onClick={() => console.log(getPolylinesAsJSON())}>GetCoordinates</button>
+      <button onClick={() => console.log(getCoordinatesAsJSON())}>GetCoordinates</button>
 
       <hr />
 
